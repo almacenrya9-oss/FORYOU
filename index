@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Para ti ♥</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+:root{
+  --bg:#1e1226; --bg2:#2d1a38; --rose:#f4b6c2; --gold:#f2c879; --text:#fff1e6; --muted:#d9bfd0;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(ellipse at 50% 0%,var(--bg2),var(--bg) 70%) fixed;color:var(--text);font-family:Lora,Georgia,serif;line-height:1.7;overflow-x:hidden}
+.hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.hearts span{position:absolute;bottom:-40px;color:var(--rose);opacity:0;animation:up linear forwards}
+@keyframes up{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:.7}100%{transform:translateY(-110vh) rotate(40deg);opacity:0}}
+main{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:0 22px 80px}
+section{min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:48px 0}
+h1{font-family:Caveat,cursive;font-weight:700;font-size:clamp(3.2rem,15vw,6rem);line-height:1;margin:0 0 16px;color:var(--rose)}
+h2{font-family:Caveat,cursive;font-weight:700;font-size:clamp(2.2rem,9vw,3.2rem);margin:0 0 20px;color:var(--gold)}
+p{margin:0 0 14px}
+.sub{color:var(--muted);font-style:italic;min-height:3.4em;max-width:30ch}
+button{font:inherit;cursor:pointer;border:0;border-radius:999px;padding:14px 30px;background:var(--rose);color:#3a1530;font-weight:600;transition:transform .2s,background .2s}
+button:hover{background:#ffd0da;transform:scale(1.05)}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.letter{background:#fff1e6;color:#3b2a30;border-radius:6px;padding:34px 28px;text-align:left;box-shadow:0 20px 50px rgba(0,0,0,.45);max-height:0;opacity:0;overflow:hidden;transition:max-height 1.2s ease,opacity .8s,padding .8s;padding-top:0;padding-bottom:0}
+.letter.open{max-height:1400px;opacity:1;padding-top:34px;padding-bottom:34px}
+.letter p{font-size:1.05rem}
+.letter .sign{font-family:Caveat,cursive;font-size:2rem;text-align:right;color:#a63d5a;margin:18px 0 0}
+.timer{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;margin-top:10px}
+.timer div{border:1px solid rgba(244,182,194,.4);border-radius:12px;padding:16px 4px}
+.timer b{display:block;font-family:Caveat,cursive;font-size:clamp(2rem,10vw,3rem);color:var(--gold);line-height:1}
+.timer small{color:var(--muted)}
+.reasons{list-style:none;padding:0;margin:0;width:100%;display:grid;gap:12px;text-align:left}
+.reasons li{border-left:3px solid var(--rose);padding:6px 0 6px 16px}
+.ask{display:flex;gap:18px;justify-content:center;align-items:center;flex-wrap:wrap;min-height:110px;position:relative;width:100%}
+#no{background:transparent;color:var(--muted);border:1px solid var(--muted)}
+#yes{font-size:1.2rem;transition:transform .3s}
+.final{display:none}
+.final.show{display:block;animation:pop .8s ease}
+@keyframes pop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+.hint{color:var(--muted);font-size:.9rem;margin-top:26px}
+@media (prefers-reduced-motion:reduce){.hearts{display:none}*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="hearts" id="hearts" aria-hidden="true"></div>
+<main>
+
+<section id="inicio">
+  <h1 id="nombre"></h1>
+  <p class="sub" id="typed" aria-live="polite"></p>
+  <button id="abrir">Ábrelo, es para ti</button>
+  <p class="hint">Baja con calma, hay más</p>
+</section>
+
+<section id="carta-sec">
+  <h2>Una carta para ti</h2>
+  <article class="letter" id="carta"></article>
+  <button id="leer" style="margin-top:26px">Leer mi carta</button>
+</section>
+
+<section id="tiempo">
+  <h2>Tiempo a tu lado</h2>
+  <p class="sub" style="min-height:0">Y sigue contando…</p>
+  <div class="timer" id="timer"></div>
+</section>
+
+<section id="razones">
+  <h2>Por qué te quiero</h2>
+  <ul class="reasons" id="lista"></ul>
+</section>
+
+<section id="pregunta">
+  <div id="preg">
+    <h2 id="pq"></h2>
+    <div class="ask">
+      <button id="yes">Sí ♥</button>
+      <button id="no">No</button>
+    </div>
+  </div>
+  <div class="final" id="final">
+    <h1>¡Lo sabía!</h1>
+    <p id="fmsg"></p>
+  </div>
+</section>
+
+</main>
+
+<script>
+/* ===== PERSONALIZA AQUÍ ===== */
+const CONFIG = {
+  nombre: "Mi amor",                       // su nombre o apodo
+  frases: ["Hice algo especial para ti…", "porque mereces todo lo bonito."],
+  fecha: "2026-04-27T00:00:00",            // desde cuándo están juntos (AAAA-MM-DDTHH:MM:SS)
+  carta: [
+    "Hay personas que llegan a tu vida y lo cambian todo sin hacer ruido. Tú llegaste así.",
+    "Gracias por tu paciencia, por tu risa y por cada día que haces más ligero.",
+    "No sé qué viene mañana, pero sé con quién quiero descubrirlo."
+  ],
+  firma: "Con todo mi cariño, Marcos",
+  razones: [
+    "Porque tu sonrisa me arregla hasta los peores días.",
+    "Porque contigo todo se siente en casa.",
+    "Porque me haces querer ser mejor cada día."
+  ],
+  pregunta: "¿Quieres seguir escribiendo nuestra historia conmigo?",
+  respuestaFinal: "Gracias por decir que sí. Te quiero muchísimo ♥"
+};
+/* ============================ */
+
+const $ = id => document.getElementById(id);
+$("nombre").textContent = CONFIG.nombre;
+$("carta").innerHTML = CONFIG.carta.map(t => "<p>" + t + "</p>").join("") + '<p class="sign">' + CONFIG.firma + "</p>";
+$("lista").innerHTML = CONFIG.razones.map(r => "<li>" + r + "</li>").join("");
+$("pq").textContent = CONFIG.pregunta;
+$("fmsg").textContent = CONFIG.respuestaFinal;
+
+/* Corazones flotantes */
+function heart(){
+  const s = document.createElement("span");
+  s.textContent = "♥";
+  s.style.left = Math.random()*100 + "vw";
+  s.style.fontSize = (12 + Math.random()*22) + "px";
+  const d = 6 + Math.random()*6;
+  s.style.animationDuration = d + "s";
+  $("hearts").appendChild(s);
+  setTimeout(() => s.remove(), d*1000);
+}
+setInterval(heart, 700);
+
+/* Texto que se escribe solo */
+const frase = CONFIG.frases.join(" ");
+let i = 0;
+(function type(){
+  if (i <= frase.length){ $("typed").textContent = frase.slice(0,i++); setTimeout(type, 55); }
+})();
+
+/* Botones */
+$("abrir").onclick = () => $("carta-sec").scrollIntoView({behavior:"smooth"});
+$("leer").onclick = () => {
+  $("carta").classList.add("open");
+  $("leer").style.display = "none";
+  for (let k=0;k<15;k++) setTimeout(heart, k*90);
+};
+
+/* Contador */
+function tick(){
+  let diff = Math.max(0, Date.now() - new Date(CONFIG.fecha).getTime());
+  const d = Math.floor(diff/864e5), h = Math.floor(diff%864e5/36e5),
+        m = Math.floor(diff%36e5/6e4), s = Math.floor(diff%6e4/1e3);
+  $("timer").innerHTML = [[d,"días"],[h,"horas"],[m,"min"],[s,"seg"]]
+    .map(x => "<div><b>" + x[0] + "</b><small>" + x[1] + "</small></div>").join("");
+}
+tick(); setInterval(tick, 1000);
+
+/* Pregunta: el "No" se escapa */
+const no = $("no"), yes = $("yes");
+let scale = 1;
+function huir(){
+  const r = no.parentElement.getBoundingClientRect();
+  no.style.position = "absolute";
+  no.style.left = Math.random()*(r.width - 90) + "px";
+  no.style.top  = Math.random()*(r.height - 50) + "px";
+  scale = Math.min(scale + .12, 2);
+  yes.style.transform = "scale(" + scale + ")";
+}
+no.addEventListener("mouseenter", huir);
+no.addEventListener("touchstart", e => { e.preventDefault(); huir(); }, {passive:false});
+no.addEventListener("click", huir);
+yes.onclick = () => {
+  $("preg").style.display = "none";
+  $("final").classList.add("show");
+  for (let k=0;k<40;k++) setTimeout(heart, k*80);
+};
+</script>
+</body>
+</html>
